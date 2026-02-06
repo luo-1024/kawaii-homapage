@@ -111,7 +111,7 @@
 
                 const fetchData = async () => {
                     try {
-                        const response = await fetch('data/profile.json');
+                        const response = await fetch('data/profile.json?t=' + new Date().getTime());
                         if (!response.ok) throw new Error('Failed to load data');
                         profile.value = await response.json();
                     } catch (error) {

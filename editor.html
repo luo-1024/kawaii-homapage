@@ -200,7 +200,7 @@
                             return;
                         }
 
-                        const response = await fetch('data/profile.json');
+                        const response = await fetch('data/profile.json?t=' + new Date().getTime());
                         if (response.ok) {
                             profile.value = await response.json();
                             // Sync to local storage

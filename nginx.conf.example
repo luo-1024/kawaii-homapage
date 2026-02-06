@@ -12,9 +12,15 @@ server {
     }
 
     # 缓存静态资源（图片、CSS、JS）30天，加速访问
-    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|json)$ {
+    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg)$ {
         expires 30d;
         add_header Cache-Control "public, no-transform";
+    }
+
+    # JSON 数据文件不缓存，确保实时性
+    location ~* \.json$ {
+        expires -1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
     }
 
     # API 转发配置：将 /api 请求转发给本地 Node.js 服务
