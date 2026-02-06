@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人主页 ✨</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div id="app" class="min-h-screen p-4 md:p-8 flex justify-center items-start">
+        
+        <!-- Loading State -->
+        <div v-if="loading" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+            <div class="text-center">
+                <div class="animate-bounce text-4xl mb-2">🌸</div>
+                <p class="text-gray-400">Loading...</p>
+            </div>
+        </div>
+
+        <div v-else class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Left Sidebar: Profile -->
+            <div class="md:col-span-1 space-y-6">
+                <div class="glass-card rounded-3xl p-6 text-center kawaii-shadow animate-float relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-24 bg-pink-100 opacity-50"></div>
+                    
+                    <div class="relative z-10 mt-4">
+                        <img :src="profile.basicInfo.avatar" alt="Avatar" 
+                             class="w-32 h-32 rounded-full mx-auto border-4 border-white shadow-md object-cover hover-bounce">
+                        
+                        <h1 class="text-2xl font-bold mt-4 text-gray-800">{{ profile.basicInfo.nickname }}</h1>
+                        <p class="text-sm text-gray-500 mt-2 px-2">{{ profile.basicInfo.signature }}</p>
+                    </div>
+
+                    <div class="mt-6 flex justify-center gap-3">
+                        <button class="p-2 bg-pink-50 text-pink-400 rounded-full hover:bg-pink-100 transition-colors">
+                            <i data-lucide="heart" class="w-5 h-5"></i>
+                        </button>
+                        <button class="p-2 bg-blue-50 text-blue-400 rounded-full hover:bg-blue-100 transition-colors">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i>
+                        </button>
+                        <button class="p-2 bg-purple-50 text-purple-400 rounded-full hover:bg-purple-100 transition-colors">
+                            <i data-lucide="share-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hobbies Section -->
+                <div class="glass-card rounded-3xl p-6 kawaii-shadow">
+                    <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                        <i data-lucide="star" class="w-5 h-5 text-yellow-400"></i>
+                        我的爱好
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        <span v-for="(hobby, index) in profile.hobbies" :key="index"
+                              class="px-3 py-1 bg-white border border-gray-100 rounded-full text-sm text-gray-600 shadow-sm hover:scale-105 transition-transform cursor-default">
+                            {{ hobby }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content: Mood Wall -->
+            <div class="md:col-span-2">
+                <div class="glass-card rounded-3xl p-6 kawaii-shadow h-full">
+                    <h2 class="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+                        <i data-lucide="cloud" class="w-6 h-6 text-blue-400"></i>
+                        心情便利贴
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div v-for="mood in profile.moods" :key="mood.id"
+                             :class="['p-4 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg', mood.color || 'bg-white']">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs text-gray-500 font-medium bg-white/50 px-2 py-1 rounded-lg">
+                                    {{ mood.date }}
+                                </span>
+                                <i data-lucide="pin" class="w-4 h-4 text-gray-400 opacity-50"></i>
+                            </div>
+                            <p class="text-gray-700 leading-relaxed">{{ mood.content }}</p>
+                        </div>
+                    </div>
+
+                    <div v-if="profile.moods.length === 0" class="text-center py-10 text-gray-400">
+                        <p>还没有记录心情哦 ~</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const loading = ref(true);
+                const profile = ref({
+                    basicInfo: { nickname: '', avatar: '', signature: '' },
+                    hobbies: [],
+                    moods: []
+                });
+
+                const fetchData = async () => {
+                    try {
+                        const response = await fetch('data/profile.json');
+                        if (!response.ok) throw new Error('Failed to load data');
+                        profile.value = await response.json();
+                    } catch (error) {
+                        console.error('Error loading profile:', error);
+                        // Fallback data if fetch fails (e.g. opening locally without server)
+                        profile.value = {
+                            basicInfo: { nickname: 'Error', avatar: '', signature: 'Please run on a server!' },
+                            hobbies: ['Error'],
+                            moods: [{ id: 1, content: 'Cannot load data/profile.json. Are you running this via file://? Please use a local server.', date: 'Now', color: 'bg-red-100' }]
+                        };
+                    } finally {
+                        loading.value = false;
+                        nextTick(() => {
+                            lucide.createIcons();
+                        });
+                    }
+                };
+
+                onMounted(() => {
+                    fetchData();
+                });
+
+                return {
+                    loading,
+                    profile
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

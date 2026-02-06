@@ -1,0 +1,34 @@
+{
+  "basicInfo": {
+    "nickname": "Momo酱 🍑",
+    "avatar": "https://copilot-cn.bytedance.net/api/ide/v1/text_to_image?prompt=cute%20smiling%20cartoon%20girl%2C%20anime%20style%2C%20kawaii%2C%20pastel%20colors&image_size=square",
+    "signature": "✨ 魔法少女见习中 | 喜欢发呆和画画 🎨"
+  },
+  "hobbies": [
+    "追番 📺",
+    "听歌 🎧",
+    "手账 📒",
+    "奶茶 🧋",
+    "猫咪 🐱"
+  ],
+  "moods": [
+    {
+      "id": 1,
+      "content": "今天天气真好，想去公园野餐！🌸",
+      "date": "2023-10-24",
+      "color": "bg-pink-100"
+    },
+    {
+      "id": 2,
+      "content": "作业好多写不完啦... 😭",
+      "date": "2023-10-25",
+      "color": "bg-blue-100"
+    },
+    {
+      "id": 3,
+      "content": "终于买到了喜欢的漫画！开心！✨",
+      "date": "2023-10-26",
+      "color": "bg-yellow-100"
+    }
+  ]
+}

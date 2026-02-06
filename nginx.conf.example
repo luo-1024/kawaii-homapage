@@ -1,0 +1,24 @@
+server {
+    listen 80;
+    server_name _;  # 如果有域名请修改为域名，无域名则保持 _ 或填写公网 IP
+
+    # 项目根目录，请修改为你实际 clone 代码的路径
+    root /var/www/kawaii-homepage;
+    index index.html;
+
+    # 核心配置：尝试查找文件，找不到则返回 404
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # 缓存静态资源（图片、CSS、JS）30天，加速访问
+    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|json)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # 禁止访问 .git 等隐藏文件
+    location ~ /\. {
+        deny all;
+    }
+}
