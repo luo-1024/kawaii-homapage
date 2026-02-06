@@ -17,6 +17,16 @@ server {
         add_header Cache-Control "public, no-transform";
     }
 
+    # API 转发配置：将 /api 请求转发给本地 Node.js 服务
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
     # 禁止访问 .git 等隐藏文件
     location ~ /\. {
         deny all;

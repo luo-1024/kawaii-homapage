@@ -32,8 +32,14 @@
                             <input v-model="profile.basicInfo.nickname" type="text" class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-pink-200 focus:border-pink-300 outline-none transition-all">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">头像链接</label>
-                            <input v-model="profile.basicInfo.avatar" type="text" class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-pink-200 outline-none transition-all text-sm">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">头像</label>
+                            <div class="flex gap-2">
+                                <input v-model="profile.basicInfo.avatar" type="text" placeholder="输入图片URL" class="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-pink-200 outline-none transition-all text-sm">
+                                <label class="cursor-pointer bg-pink-100 hover:bg-pink-200 text-pink-500 px-3 py-2 rounded-lg flex items-center justify-center transition-colors">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                    <input type="file" accept="image/*" class="hidden" @change="handleAvatarUpload">
+                                </label>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">个性签名</label>
@@ -186,9 +192,19 @@
                 // Load initial data
                 const fetchData = async () => {
                     try {
+                        // First check local storage for drafts
+                        const localData = localStorage.getItem('sakura_profile_draft');
+                        if (localData) {
+                            console.log('Loaded from LocalStorage');
+                            profile.value = JSON.parse(localData);
+                            return;
+                        }
+
                         const response = await fetch('data/profile.json');
                         if (response.ok) {
                             profile.value = await response.json();
+                            // Sync to local storage
+                            localStorage.setItem('sakura_profile_draft', JSON.stringify(profile.value));
                         }
                     } catch (e) {
                         console.log('Using default template');
@@ -198,6 +214,23 @@
                             moods: []
                         };
                     }
+                };
+
+                const handleAvatarUpload = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    // Limit file size to 500KB to prevent huge JSON files
+                    if (file.size > 500 * 1024) {
+                        alert('图片太大了！请上传小于 500KB 的图片 😣');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        profile.value.basicInfo.avatar = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
                 };
 
                 const addHobby = () => profile.value.hobbies.push('新爱好');
@@ -214,26 +247,59 @@
                 };
                 const removeMood = (index) => profile.value.moods.splice(index, 1);
 
-                const saveProfile = () => {
-                    const dataStr = JSON.stringify(profile.value, null, 2);
-                    const blob = new Blob([dataStr], { type: "application/json" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = "profile.json";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    alert('已下载 profile.json！\n请将其覆盖到项目的 data/ 目录下并提交到 GitHub。');
+                const saveProfile = async () => {
+                    // 1. Save to LocalStorage (Backup)
+                    localStorage.setItem('sakura_profile_draft', JSON.stringify(profile.value));
+
+                    try {
+                        // 2. Try to save to server via API
+                        // Note: In development (localhost:8080), we need to point to port 3000
+                        // In production (nginx), /api/save will be proxied correctly
+                        const apiUrl = window.location.hostname === 'localhost' 
+                            ? 'http://localhost:3000/api/save' 
+                            : '/api/save';
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(profile.value)
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            alert('保存成功！🎉\n服务器数据已更新，网站内容已同步。');
+                        } else {
+                            throw new Error(result.message || 'Server error');
+                        }
+                    } catch (err) {
+                        console.error('Save failed:', err);
+                        
+                        // 3. Fallback: File System / Download
+                        if (confirm('连接服务器保存失败（可能是本地开发环境未启动 API 服务）。\n是否下载 JSON 文件手动保存？')) {
+                             const dataStr = JSON.stringify(profile.value, null, 2);
+                             const blob = new Blob([dataStr], { type: "application/json" });
+                             const url = URL.createObjectURL(blob);
+                             const a = document.createElement('a');
+                             a.href = url;
+                             a.download = "profile.json";
+                             document.body.appendChild(a);
+                             a.click();
+                             document.body.removeChild(a);
+                             URL.revokeObjectURL(url);
+                        }
+                    }
                 };
 
                 onMounted(() => {
                     fetchData();
                 });
 
-                // Re-render icons when DOM updates
-                watch(profile, () => {
+                // Auto-save to localStorage on changes
+                watch(profile, (newVal) => {
+                    localStorage.setItem('sakura_profile_draft', JSON.stringify(newVal));
                     nextTick(() => lucide.createIcons());
                 }, { deep: true });
 
