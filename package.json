@@ -1,0 +1,27 @@
+{
+  "name": "kawaii-homepage",
+  "version": "1.0.0",
+  "description": "这是一个专为可爱女生设计的个人主页模板！你可以展示你的头像、心情和爱好，还有一个专属的编辑器来修改内容。不需要写代码，按照这个说明书一步步操作就可以啦！",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luo-1024/kawaii-homapage.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/luo-1024/kawaii-homapage/issues"
+  },
+  "homepage": "https://github.com/luo-1024/kawaii-homapage#readme",
+  "dependencies": {
+    "cos-nodejs-sdk-v5": "^2.15.4",
+    "dotenv": "^17.2.4",
+    "multer": "^2.0.2"
+  }
+}
