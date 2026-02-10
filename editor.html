@@ -216,21 +216,50 @@
                     }
                 };
 
-                const handleAvatarUpload = (event) => {
+                const handleAvatarUpload = async (event) => {
                     const file = event.target.files[0];
                     if (!file) return;
 
-                    // Limit file size to 500KB to prevent huge JSON files
-                    if (file.size > 500 * 1024) {
-                        alert('图片太大了！请上传小于 500KB 的图片 😣');
+                    // Limit file size to 5MB
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('图片太大了！请上传小于 5MB 的图片 😣');
                         return;
                     }
 
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        profile.value.basicInfo.avatar = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
+                    // 1. Try to upload to server (COS)
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const apiUrl = window.location.hostname === 'localhost' 
+                            ? 'http://localhost:3000/api/upload' 
+                            : '/api/upload';
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success && result.url) {
+                            profile.value.basicInfo.avatar = result.url;
+                            alert('头像上传成功！✨');
+                        } else {
+                            throw new Error(result.message || 'Upload failed');
+                        }
+                    } catch (err) {
+                        console.warn('Server upload failed, falling back to Base64:', err);
+                        
+                        // 2. Fallback: Local Base64 (if server upload fails)
+                        if (confirm('服务器上传失败 (可能是未配置 COS)，是否转为本地 Base64 存储？\n(注意：Base64 会让文件变大，影响加载速度)')) {
+                             const reader = new FileReader();
+                             reader.onload = (e) => {
+                                 profile.value.basicInfo.avatar = e.target.result;
+                             };
+                             reader.readAsDataURL(file);
+                        }
+                    }
                 };
 
                 const addHobby = () => profile.value.hobbies.push('新爱好');
