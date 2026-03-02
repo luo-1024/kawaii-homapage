@@ -84,6 +84,7 @@
                                 </span>
                                 <i data-lucide="pin" class="w-4 h-4 text-gray-400 opacity-50"></i>
                             </div>
+                            <img v-if="mood.image" :src="mood.image" class="w-full h-32 object-cover rounded-xl mb-2">
                             <p class="text-gray-700 leading-relaxed">{{ mood.content }}</p>
                         </div>
                     </div>

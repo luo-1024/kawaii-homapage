@@ -74,7 +74,7 @@ const server = http.createServer((req, res) => {
 
             // 生成唯一文件名
             const ext = path.extname(req.file.originalname) || '.png';
-            const key = `avatars/${Date.now()}${ext}`;
+            const key = `moods/${Date.now()}${ext}`;
 
             // 上传到 COS
             cos.putObject({
@@ -95,9 +95,44 @@ const server = http.createServer((req, res) => {
                         : `https://${data.Location}`;
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ success: true, url: url }));
+                    res.end(JSON.stringify({ success: true, url: url, key: key }));
                 }
             });
+        });
+        return;
+    }
+
+    // 处理 /api/delete-file (删除 COS 图片)
+    if (req.method === 'POST' && req.url === '/api/delete-file') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                if (!data.key) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, message: 'Missing key' }));
+                    return;
+                }
+
+                cos.deleteObject({
+                    Bucket: process.env.COS_BUCKET,
+                    Region: process.env.COS_REGION,
+                    Key: data.key,
+                }, function(err, data) {
+                    if (err) {
+                        console.error('COS Delete Error:', err);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: false, message: 'Delete from COS failed' }));
+                    } else {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: true }));
+                    }
+                });
+            } catch (error) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ success: false }));
+            }
         });
         return;
     }
