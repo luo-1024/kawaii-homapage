@@ -8,6 +8,7 @@ require('dotenv').config();
 const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'profile.json');
 const LUO_DATA_FILE = path.join(__dirname, 'data', 'profile_luo.json');
+const LUO_DATA_DIR = path.join(__dirname, 'luo', 'data');
 
 // 初始化 COS
 const cos = new COS({
@@ -145,15 +146,28 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             try {
                 const data = JSON.parse(body);
-                fs.writeFile(LUO_DATA_FILE, JSON.stringify(data, null, 2), (err) => {
-                    if (err) {
-                        res.writeHead(500, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ success: false, message: 'Write failed' }));
-                    } else {
+                const jsonStr = JSON.stringify(data, null, 2);
+                
+                // 同时保存到两个位置
+                const savePromises = [
+                    new Promise((resolve, reject) => {
+                        fs.writeFile(LUO_DATA_FILE, jsonStr, (err) => err ? reject(err) : resolve());
+                    }),
+                    new Promise((resolve, reject) => {
+                        fs.writeFile(path.join(LUO_DATA_DIR, 'profile_luo.json'), jsonStr, (err) => err ? reject(err) : resolve());
+                    })
+                ];
+                
+                Promise.all(savePromises)
+                    .then(() => {
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({ success: true, message: 'Saved' }));
-                    }
-                });
+                    })
+                    .catch((err) => {
+                        console.error('Save error:', err);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: false, message: 'Write failed' }));
+                    });
             } catch (error) {
                 res.writeHead(400);
                 res.end(JSON.stringify({ success: false }));
