@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'profile.json');
+const LUO_DATA_FILE = path.join(__dirname, 'data', 'profile_luo.json');
 
 // 初始化 COS
 const cos = new COS({
@@ -104,6 +105,107 @@ const server = http.createServer((req, res) => {
 
     // 处理 /api/delete-file (删除 COS 图片)
     if (req.method === 'POST' && req.url === '/api/delete-file') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                if (!data.key) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, message: 'Missing key' }));
+                    return;
+                }
+
+                cos.deleteObject({
+                    Bucket: process.env.COS_BUCKET,
+                    Region: process.env.COS_REGION,
+                    Key: data.key,
+                }, function(err, data) {
+                    if (err) {
+                        console.error('COS Delete Error:', err);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: false, message: 'Delete from COS failed' }));
+                    } else {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: true }));
+                    }
+                });
+            } catch (error) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ success: false }));
+            }
+        });
+        return;
+    }
+
+    // 处理 /api/save-luo (luo 的数据保存)
+    if (req.method === 'POST' && req.url === '/api/save-luo') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                fs.writeFile(LUO_DATA_FILE, JSON.stringify(data, null, 2), (err) => {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: false, message: 'Write failed' }));
+                    } else {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: true, message: 'Saved' }));
+                    }
+                });
+            } catch (error) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ success: false }));
+            }
+        });
+        return;
+    }
+
+    // 处理 /api/upload-luo (luo 的图片上传)
+    if (req.method === 'POST' && req.url === '/api/upload-luo') {
+        upload.single('file')(req, res, (err) => {
+            if (err) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, message: err.message }));
+                return;
+            }
+
+            if (!req.file) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, message: 'No file uploaded' }));
+                return;
+            }
+
+            const ext = path.extname(req.file.originalname) || '.png';
+            const key = `luo/${Date.now()}${ext}`;
+
+            cos.putObject({
+                Bucket: process.env.COS_BUCKET,
+                Region: process.env.COS_REGION,
+                Key: key,
+                Body: req.file.buffer,
+            }, function(err, data) {
+                if (err) {
+                    console.error('COS Upload Error:', err);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, message: 'Upload to COS failed' }));
+                } else {
+                    const cdnDomain = process.env.COS_CDN_DOMAIN;
+                    const url = cdnDomain 
+                        ? `https://${cdnDomain}/${key}` 
+                        : `https://${data.Location}`;
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true, url: url, key: key }));
+                }
+            });
+        });
+        return;
+    }
+
+    // 处理 /api/delete-file-luo (删除 luo 的 COS 图片)
+    if (req.method === 'POST' && req.url === '/api/delete-file-luo') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {

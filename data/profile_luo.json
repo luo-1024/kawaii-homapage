@@ -1,0 +1,74 @@
+{
+  "basicInfo": {
+    "nickname": "罗子健",
+    "avatar": "assets/avatar.svg",
+    "signature": "一个热爱技术的程序员，喜欢折腾各种有趣的项目",
+    "github": "https://github.com",
+    "email": "luo@example.com",
+    "blog": "https://luozihan.cn"
+  },
+  "skills": [
+    "JavaScript",
+    "TypeScript",
+    "Node.js",
+    "Vue",
+    "React",
+    "Python",
+    "Docker"
+  ],
+  "hobbies": [
+    "Coding",
+    "Reading",
+    "Music",
+    "Coffee ☕"
+  ],
+  "timeline": [
+    {
+      "id": 1,
+      "title": "开始编程之旅",
+      "description": "接触了第一门编程语言，开启了技术探索之路",
+      "date": "2015"
+    },
+    {
+      "id": 2,
+      "title": "加入第一家公司",
+      "description": "正式成为一名后端开发工程师",
+      "date": "2018"
+    },
+    {
+      "id": 3,
+      "title": "独立完成项目",
+      "description": "从 0 到 1 构建了多个线上项目",
+      "date": "2020"
+    },
+    {
+      "id": 4,
+      "title": "持续学习中",
+      "description": "不断学习新技术，提升专业能力",
+      "date": "现在"
+    }
+  ],
+  "projects": [
+    {
+      "id": 1,
+      "name": "个人主页",
+      "description": "一个漂亮的个人主页模板",
+      "link": "https://github.com/luo-1024/kawaii-homapage",
+      "tags": ["Vue", "Node.js", "Tailwind"]
+    }
+  ],
+  "moods": [
+    {
+      "id": 1,
+      "content": "今天完成了新项目的架构设计，进展顺利！",
+      "date": "2024-01-15",
+      "color": "bg-emerald-900"
+    },
+    {
+      "id": 2,
+      "content": "学习新技术中，虽然有点难但很有趣",
+      "date": "2024-01-14",
+      "color": "bg-blue-900"
+    }
+  ]
+}

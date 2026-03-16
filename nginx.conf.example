@@ -1,29 +1,45 @@
 server {
     listen 80;
-    server_name _;  # 如果有域名请修改为域名，无域名则保持 _ 或填写公网 IP
+    server_name luozihan.cn;
 
-    # 项目根目录，请修改为你实际 clone 代码的路径
     root /var/www/kawaii-homepage;
     index index.html;
 
-    # 核心配置：尝试查找文件，找不到则返回 404
     location / {
         try_files $uri $uri/ =404;
     }
 
-    # 缓存静态资源（图片、CSS、JS）30天，加速访问
+    location /luo/ {
+        alias /var/www/kawaii-homepage/;
+        try_files $uri $uri/ =404;
+        
+        location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg)$ {
+            expires 30d;
+            add_header Cache-Control "public, no-transform";
+        }
+        
+        location ~* \.json$ {
+            expires -1;
+            add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+        }
+        
+        location /luo/api/ {
+            proxy_pass http://127.0.0.1:3000/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+        }
+    }
+
     location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg)$ {
         expires 30d;
         add_header Cache-Control "public, no-transform";
     }
 
-    # JSON 数据文件不缓存，确保实时性
     location ~* \.json$ {
         expires -1;
         add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
     }
 
-    # API 转发配置：将 /api 请求转发给本地 Node.js 服务
     location /api/ {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -33,7 +49,6 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    # 禁止访问 .git 等隐藏文件
     location ~ /\. {
         deny all;
     }

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>罗子健的空间 ✨</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/css/style_luo.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-900">
+    <div id="app" class="min-h-screen p-4 md:p-8 flex justify-center items-start">
+        
+        <div v-if="loading" class="fixed inset-0 flex items-center justify-center bg-slate-900 z-50">
+            <div class="text-center">
+                <div class="animate-pulse text-4xl mb-2">⏳</div>
+                <p class="text-slate-400">Loading...</p>
+            </div>
+        </div>
+
+        <div v-else class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Left Sidebar: Profile -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="profile-card rounded-3xl p-8 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-700 to-slate-800"></div>
+                    
+                    <div class="relative z-10 mt-8">
+                        <img :src="profile.basicInfo.avatar" alt="Avatar" 
+                             class="w-36 h-36 rounded-full mx-auto border-4 border-slate-700 shadow-xl object-cover">
+                        
+                        <h1 class="text-2xl font-bold mt-6 text-white">{{ profile.basicInfo.nickname }}</h1>
+                        <p class="text-sm text-slate-400 mt-3 px-4 leading-relaxed">{{ profile.basicInfo.signature }}</p>
+                    </div>
+
+                    <div class="mt-8 flex justify-center gap-4">
+                        <a v-if="profile.basicInfo.github" :href="profile.basicInfo.github" target="_blank" class="p-3 bg-slate-700 text-slate-300 rounded-full hover:bg-slate-600 transition-colors">
+                            <i data-lucide="github" class="w-5 h-5"></i>
+                        </a>
+                        <a v-if="profile.basicInfo.email" :href="'mailto:' + profile.basicInfo.email" class="p-3 bg-slate-700 text-slate-300 rounded-full hover:bg-slate-600 transition-colors">
+                            <i data-lucide="mail" class="w-5 h-5"></i>
+                        </a>
+                        <a v-if="profile.basicInfo.blog" :href="profile.basicInfo.blog" target="_blank" class="p-3 bg-slate-700 text-slate-300 rounded-full hover:bg-slate-600 transition-colors">
+                            <i data-lucide="book-open" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="profile-card rounded-3xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                        <i data-lucide="code-2" class="w-5 h-5 text-emerald-400"></i>
+                        技术栈
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        <span v-for="(skill, index) in profile.skills" :key="index"
+                              class="px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-600 transition-colors cursor-default">
+                            {{ skill }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Hobbies Section -->
+                <div class="profile-card rounded-3xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                        <i data-lucide="coffee" class="w-5 h-5 text-amber-400"></i>
+                        业余爱好
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        <span v-for="(hobby, index) in profile.hobbies" :key="index"
+                              class="px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-600 transition-colors cursor-default">
+                            {{ hobby }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Timeline Section -->
+                <div class="profile-card rounded-3xl p-8">
+                    <h2 class="text-xl font-bold text-white mb-8 flex items-center gap-2">
+                        <i data-lucide="calendar-clock" class="w-6 h-6 text-blue-400"></i>
+                        时间线
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div v-for="item in profile.timeline" :key="item.id"
+                             class="relative pl-8 border-l-2 border-slate-700">
+                            <div class="absolute -left-2 top-0 w-4 h-4 rounded-full bg-slate-600 border-2 border-slate-800"></div>
+                            <div class="mb-2">
+                                <span class="text-xs text-slate-500 font-mono">{{ item.date }}</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-white">{{ item.title }}</h3>
+                            <p class="text-sm text-slate-400 mt-2 leading-relaxed">{{ item.description }}</p>
+                        </div>
+                    </div>
+
+                    <div v-if="profile.timeline.length === 0" class="text-center py-10 text-slate-500">
+                        <p>还没有记录时间线哦 ~</p>
+                    </div>
+                </div>
+
+                <!-- Projects Section -->
+                <div class="profile-card rounded-3xl p-8">
+                    <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <i data-lucide="folder-kanban" class="w-6 h-6 text-purple-400"></i>
+                        项目作品
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div v-for="project in profile.projects" :key="project.id"
+                             class="p-5 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-500 transition-all hover:shadow-lg">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-lg font-semibold text-white">{{ project.name }}</h3>
+                                <a v-if="project.link" :href="project.link" target="_blank" class="text-slate-400 hover:text-white transition-colors">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                            <p class="text-sm text-slate-400 leading-relaxed">{{ project.description }}</p>
+                            <div v-if="project.tags" class="flex flex-wrap gap-2 mt-4">
+                                <span v-for="tag in project.tags" class="text-xs px-2 py-1 bg-slate-700 text-slate-400 rounded">{{ tag }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="profile.projects && profile.projects.length === 0" class="text-center py-10 text-slate-500">
+                        <p>还没有项目哦 ~</p>
+                    </div>
+                </div>
+
+                <!-- Mood Wall -->
+                <div class="profile-card rounded-3xl p-8">
+                    <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <i data-lucide="message-square" class="w-6 h-6 text-rose-400"></i>
+                        碎碎念
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div v-for="mood in profile.moods" :key="mood.id"
+                             :class="['p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg', mood.color || 'bg-slate-800']">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-xs text-slate-500 font-mono bg-slate-900/50 px-2 py-1 rounded-lg">
+                                    {{ mood.date }}
+                                </span>
+                            </div>
+                            <img v-if="mood.image" :src="mood.image" class="w-full h-40 object-cover rounded-xl mb-3">
+                            <p class="text-slate-300 leading-relaxed">{{ mood.content }}</p>
+                        </div>
+                    </div>
+
+                    <div v-if="profile.moods.length === 0" class="text-center py-10 text-slate-500">
+                        <p>还没有碎碎念哦 ~</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const loading = ref(true);
+                const profile = ref({
+                    basicInfo: { nickname: '', avatar: '', signature: '', github: '', email: '', blog: '' },
+                    skills: [],
+                    hobbies: [],
+                    timeline: [],
+                    projects: [],
+                    moods: []
+                });
+
+                const fetchData = async () => {
+                    try {
+                        const response = await fetch('data/profile_luo.json?t=' + new Date().getTime());
+                        if (!response.ok) throw new Error('Failed to load data');
+                        profile.value = await response.json();
+                    } catch (error) {
+                        console.error('Error loading profile:', error);
+                        profile.value = {
+                            basicInfo: { nickname: 'Error', avatar: '', signature: 'Please run on a server!', github: '', email: '', blog: '' },
+                            skills: ['Error'],
+                            hobbies: ['Error'],
+                            timeline: [],
+                            projects: [],
+                            moods: [{ id: 1, content: 'Cannot load data. Are you running this via file://? Please use a local server.', date: 'Now', color: 'bg-red-900' }]
+                        };
+                    } finally {
+                        loading.value = false;
+                        nextTick(() => {
+                            lucide.createIcons();
+                        });
+                    }
+                };
+
+                onMounted(() => {
+                    fetchData();
+                });
+
+                return {
+                    loading,
+                    profile
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

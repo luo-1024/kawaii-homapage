@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>luo 的编辑器 ✏️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/css/style_luo.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-900">
+    <div id="app" class="h-screen flex flex-col lg:flex-row overflow-hidden">
+        
+        <!-- Sidebar: Editor Controls -->
+        <div class="w-full lg:w-1/3 bg-slate-800 border-r border-slate-700 flex flex-col h-full shadow-xl z-20">
+            <div class="p-6 border-b border-slate-700 bg-slate-800">
+                <h1 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5"></i> 编辑 luo 的主页
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">修改后点击保存</p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                
+                <!-- Basic Info Section -->
+                <section>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">基本信息</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">昵称</label>
+                            <input v-model="profile.basicInfo.nickname" type="text" class="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">头像</label>
+                            <div class="flex flex-col items-center gap-4 p-4 border-2 border-dashed border-slate-600 rounded-xl bg-slate-700/50 hover:bg-slate-700 transition-colors cursor-pointer relative group">
+                                <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="handleAvatarUpload">
+                                
+                                <div class="relative">
+                                    <img :src="profile.basicInfo.avatar || 'assets/avatar.svg'" class="w-20 h-20 rounded-full object-cover border-2 border-slate-600 shadow-sm group-hover:opacity-75 transition-opacity">
+                                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <i data-lucide="camera" class="w-6 h-6 text-white"></i>
+                                    </div>
+                                </div>
+                                
+                                <span class="text-xs text-slate-400 font-medium">点击更换头像</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">个性签名</label>
+                            <textarea v-model="profile.basicInfo.signature" rows="2" class="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">GitHub</label>
+                            <input v-model="profile.basicInfo.github" type="text" placeholder="https://github.com/username" class="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">邮箱</label>
+                            <input v-model="profile.basicInfo.email" type="email" placeholder="email@example.com" class="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">博客</label>
+                            <input v-model="profile.basicInfo.blog" type="text" placeholder="https://yourblog.com" class="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Skills Section -->
+                <section>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between items-center">
+                        技术栈
+                        <button @click="addSkill" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded transition-colors text-slate-300">+ 添加</button>
+                    </h3>
+                    <div class="space-y-2">
+                        <div v-for="(skill, index) in profile.skills" :key="index" class="flex gap-2">
+                            <input v-model="profile.skills[index]" type="text" class="flex-1 px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                            <button @click="removeSkill(index)" class="text-red-400 hover:text-red-600 p-2">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hobbies Section -->
+                <section>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between items-center">
+                        业余爱好
+                        <button @click="addHobby" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded transition-colors text-slate-300">+ 添加</button>
+                    </h3>
+                    <div class="space-y-2">
+                        <div v-for="(hobby, index) in profile.hobbies" :key="index" class="flex gap-2">
+                            <input v-model="profile.hobbies[index]" type="text" class="flex-1 px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                            <button @click="removeHobby(index)" class="text-red-400 hover:text-red-600 p-2">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Timeline Section -->
+                <section>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between items-center">
+                        时间线
+                        <button @click="addTimeline" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded transition-colors text-slate-300">+ 添加</button>
+                    </h3>
+                    <div class="space-y-4">
+                        <div v-for="(item, index) in profile.timeline" :key="index" class="p-4 bg-slate-700/50 rounded-xl border border-slate-600">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs font-mono text-slate-500">#{{ index + 1 }}</span>
+                                <button @click="removeTimeline(index)" class="text-red-400 hover:text-red-600">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <input v-model="item.title" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white mb-2 text-sm" placeholder="标题">
+                            <textarea v-model="item.description" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white mb-2 text-sm" placeholder="描述"></textarea>
+                            <input v-model="item.date" type="text" class="w-full px-3 py-1 rounded-lg border border-slate-600 bg-slate-700 text-white text-xs" placeholder="时间，如: 2024.01">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Projects Section -->
+                <section>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between items-center">
+                        项目作品
+                        <button @click="addProject" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded transition-colors text-slate-300">+ 添加</button>
+                    </h3>
+                    <div class="space-y-4">
+                        <div v-for="(project, index) in profile.projects" :key="index" class="p-4 bg-slate-700/50 rounded-xl border border-slate-600">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs font-mono text-slate-500">#{{ index + 1 }}</span>
+                                <button @click="removeProject(index)" class="text-red-400 hover:text-red-600">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <input v-model="project.name" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white mb-2 text-sm" placeholder="项目名称">
+                            <textarea v-model="project.description" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white mb-2 text-sm" placeholder="项目描述"></textarea>
+                            <input v-model="project.link" type="text" class="w-full px-3 py-1 rounded-lg border border-slate-600 bg-slate-700 text-white mb-2 text-xs" placeholder="项目链接">
+                            <input v-model="project.tagsInput" type="text" class="w-full px-3 py-1 rounded-lg border border-slate-600 bg-slate-700 text-white text-xs" placeholder="标签，用逗号分隔，如: Vue, Node.js">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Moods Section -->
+                <section>
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex justify-between items-center">
+                        碎碎念
+                        <button @click="addMood" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded transition-colors text-slate-300">+ 写心情</button>
+                    </h3>
+                    <div class="space-y-4">
+                        <div v-for="(mood, index) in profile.moods" :key="mood.id" class="p-4 bg-slate-700/50 rounded-xl border border-slate-600">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs font-mono text-slate-500">#{{ index + 1 }}</span>
+                                <button @click="removeMood(index)" class="text-red-400 hover:text-red-600">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <textarea v-model="mood.content" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white mb-2 text-sm" placeholder="今天发生了什么..."></textarea>
+                            <div v-if="mood.image" class="mb-2 relative">
+                                <img :src="mood.image" class="w-full h-32 object-cover rounded-lg">
+                                <button @click="removeMoodImage(index)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1">
+                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                            <div class="flex gap-2 mb-2">
+                                <input type="file" accept="image/*" class="hidden" :ref="el => { if (el) moodFileRefs[index] = el }" @change="handleMoodImageUpload($event, index)">
+                                <button @click="triggerMoodFileUpload(index)" class="flex-1 bg-slate-600 px-3 py-1 rounded-lg border border-slate-500 text-xs text-slate-300 hover:bg-slate-500 transition-colors flex items-center justify-center gap-1">
+                                    <i data-lucide="image" class="w-3 h-3"></i>
+                                    {{ mood.image ? '更换图片' : '添加图片' }}
+                                </button>
+                            </div>
+                            <div class="flex gap-2">
+                                <input v-model="mood.date" type="text" class="w-1/2 px-3 py-1 rounded-lg border border-slate-600 bg-slate-700 text-white text-xs" placeholder="日期">
+                                <select v-model="mood.color" class="w-1/2 px-3 py-1 rounded-lg border border-slate-600 bg-slate-700 text-white text-xs">
+                                    <option value="bg-slate-800">默认</option>
+                                    <option value="bg-emerald-900">绿色</option>
+                                    <option value="bg-blue-900">蓝色</option>
+                                    <option value="bg-purple-900">紫色</option>
+                                    <option value="bg-amber-900">橙色</option>
+                                    <option value="bg-rose-900">红色</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="p-6 border-t border-slate-700 bg-slate-800">
+                <button @click="saveProfile" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transform active:scale-95 transition-all flex justify-center items-center gap-2">
+                    <i data-lucide="save" class="w-5 h-5"></i>
+                    保存配置
+                </button>
+            </div>
+        </div>
+
+        <!-- Main: Live Preview -->
+        <div class="flex-1 bg-slate-900 overflow-y-auto relative">
+            <div class="absolute top-4 right-4 bg-slate-700/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-slate-400 shadow-sm z-10 pointer-events-none">
+                LIVE PREVIEW
+            </div>
+            
+            <div class="min-h-screen p-8 flex justify-center items-start transform scale-90 origin-top">
+                <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    
+                    <!-- Left Sidebar: Profile -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="profile-card rounded-3xl p-8 text-center relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-700 to-slate-800"></div>
+                            
+                            <div class="relative z-10 mt-8">
+                                <img :src="profile.basicInfo.avatar" alt="Avatar" 
+                                     class="w-36 h-36 rounded-full mx-auto border-4 border-slate-700 shadow-xl object-cover">
+                                
+                                <h1 class="text-2xl font-bold mt-6 text-white">{{ profile.basicInfo.nickname || '你的名字' }}</h1>
+                                <p class="text-sm text-slate-400 mt-3 px-4 leading-relaxed">{{ profile.basicInfo.signature || '写一句签名吧...' }}</p>
+                            </div>
+        
+                            <div class="mt-8 flex justify-center gap-4">
+                                <div v-if="profile.basicInfo.github" class="p-3 bg-slate-700 text-slate-300 rounded-full"><i data-lucide="github" class="w-5 h-5"></i></div>
+                                <div v-if="profile.basicInfo.email" class="p-3 bg-slate-700 text-slate-300 rounded-full"><i data-lucide="mail" class="w-5 h-5"></i></div>
+                                <div v-if="profile.basicInfo.blog" class="p-3 bg-slate-700 text-slate-300 rounded-full"><i data-lucide="book-open" class="w-5 h-5"></i></div>
+                            </div>
+                        </div>
+        
+                        <!-- Skills Section -->
+                        <div class="profile-card rounded-3xl p-6">
+                            <h2 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                                <i data-lucide="code-2" class="w-5 h-5 text-emerald-400"></i>
+                                技术栈
+                            </h2>
+                            <div class="flex flex-wrap gap-2">
+                                <span v-for="(skill, index) in profile.skills" :key="index"
+                                      class="px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-sm text-slate-300">
+                                    {{ skill }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Hobbies Section -->
+                        <div class="profile-card rounded-3xl p-6">
+                            <h2 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
+                                <i data-lucide="coffee" class="w-5 h-5 text-amber-400"></i>
+                                业余爱好
+                            </h2>
+                            <div class="flex flex-wrap gap-2">
+                                <span v-for="(hobby, index) in profile.hobbies" :key="index"
+                                      class="px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-sm text-slate-300">
+                                    {{ hobby }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Right Content -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <!-- Timeline Section -->
+                        <div class="profile-card rounded-3xl p-8">
+                            <h2 class="text-xl font-bold text-white mb-8 flex items-center gap-2">
+                                <i data-lucide="calendar-clock" class="w-6 h-6 text-blue-400"></i>
+                                时间线
+                            </h2>
+                            
+                            <div class="space-y-6">
+                                <div v-for="item in profile.timeline" :key="item.id"
+                                     class="relative pl-8 border-l-2 border-slate-700">
+                                    <div class="absolute -left-2 top-0 w-4 h-4 rounded-full bg-slate-600 border-2 border-slate-800"></div>
+                                    <div class="mb-2">
+                                        <span class="text-xs text-slate-500 font-mono">{{ item.date }}</span>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-white">{{ item.title }}</h3>
+                                    <p class="text-sm text-slate-400 mt-2 leading-relaxed">{{ item.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Projects Section -->
+                        <div class="profile-card rounded-3xl p-8">
+                            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <i data-lucide="folder-kanban" class="w-6 h-6 text-purple-400"></i>
+                                项目作品
+                            </h2>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div v-for="project in profile.projects" :key="project.id"
+                                     class="p-5 bg-slate-800/50 rounded-xl border border-slate-700">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <h3 class="text-lg font-semibold text-white">{{ project.name }}</h3>
+                                        <i v-if="project.link" data-lucide="external-link" class="w-4 h-4 text-slate-500"></i>
+                                    </div>
+                                    <p class="text-sm text-slate-400 leading-relaxed">{{ project.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mood Wall -->
+                        <div class="profile-card rounded-3xl p-8">
+                            <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-6 h-6 text-rose-400"></i>
+                                碎碎念
+                            </h2>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div v-for="mood in profile.moods" :key="mood.id"
+                                     :class="['p-5 rounded-2xl transition-all duration-300', mood.color || 'bg-slate-800']">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <span class="text-xs text-slate-500 font-mono bg-slate-900/50 px-2 py-1 rounded-lg">
+                                            {{ mood.date }}
+                                        </span>
+                                    </div>
+                                    <img v-if="mood.image" :src="mood.image" class="w-full h-40 object-cover rounded-xl mb-3">
+                                    <p class="text-slate-300 leading-relaxed">{{ mood.content }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+        
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, nextTick, watch } = Vue;
+
+        createApp({
+            setup() {
+                const profile = ref({
+                    basicInfo: { nickname: '', avatar: '', signature: '', github: '', email: '', blog: '' },
+                    skills: [],
+                    hobbies: [],
+                    timeline: [],
+                    projects: [],
+                    moods: []
+                });
+
+                const moodFileRefs = ref({});
+
+                const triggerMoodFileUpload = (index) => {
+                    const input = moodFileRefs.value[index];
+                    if (input) input.click();
+                };
+
+                const processProjects = (projects) => {
+                    return projects.map(p => ({
+                        ...p,
+                        tags: p.tagsInput ? p.tagsInput.split(',').map(t => t.trim()).filter(t => t) : []
+                    }));
+                };
+
+                const loadData = async () => {
+                    try {
+                        const localData = localStorage.getItem('luo_profile_draft');
+                        if (localData) {
+                            console.log('Loaded from LocalStorage');
+                            const parsed = JSON.parse(localData);
+                            if (parsed.projects) {
+                                parsed.projects = parsed.projects.map(p => ({
+                                    ...p,
+                                    tagsInput: p.tags ? p.tags.join(', ') : ''
+                                }));
+                            }
+                            profile.value = parsed;
+                            return;
+                        }
+
+                        const response = await fetch('data/profile_luo.json?t=' + new Date().getTime());
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.projects) {
+                                data.projects = data.projects.map(p => ({
+                                    ...p,
+                                    tagsInput: p.tags ? p.tags.join(', ') : ''
+                                }));
+                            }
+                            profile.value = data;
+                            localStorage.setItem('luo_profile_draft', JSON.stringify(profile.value));
+                        }
+                    } catch (e) {
+                        console.log('Using default template');
+                        profile.value = {
+                            basicInfo: { nickname: 'Luo', avatar: '', signature: '一个普通的程序员', github: '', email: '', blog: '' },
+                            skills: ['JavaScript', 'Node.js'],
+                            hobbies: ['coding'],
+                            timeline: [],
+                            projects: [],
+                            moods: []
+                        };
+                    }
+                };
+
+                const handleAvatarUpload = async (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('图片太大了！请上传小于 5MB 的图片 😣');
+                        return;
+                    }
+
+                    const oldAvatar = profile.value.basicInfo.avatar;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                         profile.value.basicInfo.avatar = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const apiUrl = window.location.hostname === 'localhost' 
+                            ? 'http://localhost:3000/api/upload-luo' 
+                            : '/api/upload-luo';
+
+                        console.log('Uploading to:', apiUrl);
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const text = await response.text();
+                        console.log('Server response:', text);
+                        
+                        let result;
+                        try {
+                            result = JSON.parse(text);
+                        } catch (e) {
+                            throw new Error('Server returned invalid JSON: ' + text);
+                        }
+                        
+                        if (result.success && result.url) {
+                            profile.value.basicInfo.avatar = result.url;
+                            await saveProfile(); 
+                            alert('头像上传成功并已保存！✨');
+                        } else {
+                            throw new Error(result.message || 'Upload failed');
+                        }
+                    } catch (err) {
+                        console.error('Upload error details:', err);
+                        alert('上传失败: ' + err.message);
+                        if (!confirm('服务器上传失败，是否暂时使用本地预览？(刷新页面会失效)')) {
+                            profile.value.basicInfo.avatar = oldAvatar;
+                        }
+                    }
+                };
+
+                const addSkill = () => profile.value.skills.push('新技能');
+                const removeSkill = (index) => profile.value.skills.splice(index, 1);
+                
+                const addHobby = () => profile.value.hobbies.push('新爱好');
+                const removeHobby = (index) => profile.value.hobbies.splice(index, 1);
+
+                const addTimeline = () => {
+                    profile.value.timeline.push({
+                        id: Date.now(),
+                        title: '',
+                        description: '',
+                        date: ''
+                    });
+                };
+                const removeTimeline = (index) => {
+                    profile.value.timeline.splice(index, 1);
+                };
+
+                const addProject = () => {
+                    profile.value.projects.push({
+                        id: Date.now(),
+                        name: '',
+                        description: '',
+                        link: '',
+                        tagsInput: ''
+                    });
+                };
+                const removeProject = (index) => {
+                    profile.value.projects.splice(index, 1);
+                };
+                
+                const addMood = () => {
+                    const today = new Date().toISOString().split('T')[0];
+                    profile.value.moods.unshift({
+                        id: Date.now(),
+                        content: '',
+                        date: today,
+                        color: 'bg-slate-800',
+                        image: '',
+                        imageKey: ''
+                    });
+                };
+                const removeMood = async (index) => {
+                    const mood = profile.value.moods[index];
+                    if (mood.imageKey) {
+                        try {
+                            const apiUrl = window.location.hostname === 'localhost' 
+                                ? 'http://localhost:3000/api/delete-file-luo' 
+                                : '/api/delete-file-luo';
+                            await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ key: mood.imageKey })
+                            });
+                        } catch (err) {
+                            console.error('Delete image failed:', err);
+                        }
+                    }
+                    profile.value.moods.splice(index, 1);
+                };
+
+                const handleMoodImageUpload = async (event, index) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('图片太大了！请上传小于 5MB 的图片 😣');
+                        return;
+                    }
+
+                    const oldImage = profile.value.moods[index].image;
+                    const oldImageKey = profile.value.moods[index].imageKey;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                         profile.value.moods[index].image = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        const apiUrl = window.location.hostname === 'localhost' 
+                            ? 'http://localhost:3000/api/upload-luo' 
+                            : '/api/upload-luo';
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const text = await response.text();
+                        let result;
+                        try {
+                            result = JSON.parse(text);
+                        } catch (e) {
+                            throw new Error('Server returned invalid JSON: ' + text);
+                        }
+                        
+                        if (result.success && result.url) {
+                            if (oldImageKey) {
+                                try {
+                                    const deleteApiUrl = window.location.hostname === 'localhost' 
+                                        ? 'http://localhost:3000/api/delete-file-luo' 
+                                        : '/api/delete-file-luo';
+                                    await fetch(deleteApiUrl, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ key: oldImageKey })
+                                    });
+                                } catch (err) {
+                                    console.error('Delete old image failed:', err);
+                                }
+                            }
+                            profile.value.moods[index].image = result.url;
+                            profile.value.moods[index].imageKey = result.key;
+                            await saveProfile(); 
+                            alert('图片上传成功！✨');
+                        } else {
+                            throw new Error(result.message || 'Upload failed');
+                        }
+                    } catch (err) {
+                        console.error('Upload error details:', err);
+                        alert('上传失败: ' + err.message);
+                        if (!confirm('服务器上传失败，是否暂时使用本地预览？(刷新页面会失效)')) {
+                            profile.value.moods[index].image = oldImage;
+                        }
+                    }
+                };
+
+                const removeMoodImage = async (index) => {
+                    const mood = profile.value.moods[index];
+                    if (mood.imageKey) {
+                        try {
+                            const apiUrl = window.location.hostname === 'localhost' 
+                                ? 'http://localhost:3000/api/delete-file-luo' 
+                                : '/api/delete-file-luo';
+                            await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ key: mood.imageKey })
+                            });
+                        } catch (err) {
+                            console.error('Delete image failed:', err);
+                        }
+                    }
+                    profile.value.moods[index].image = '';
+                    profile.value.moods[index].imageKey = '';
+                };
+
+                const saveProfile = async () => {
+                    localStorage.setItem('luo_profile_draft', JSON.stringify(profile.value));
+
+                    const dataToSave = {
+                        ...profile.value,
+                        projects: processProjects(profile.value.projects)
+                    };
+
+                    try {
+                        const apiUrl = window.location.hostname === 'localhost' 
+                            ? 'http://localhost:3000/api/save-luo' 
+                            : '/api/save-luo';
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(dataToSave)
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            alert('保存成功！🎉');
+                        } else {
+                            throw new Error(result.message || 'Server error');
+                        }
+                    } catch (err) {
+                        console.error('Save failed:', err);
+                        
+                        if (confirm('连接服务器保存失败，是否下载 JSON 文件？')) {
+                             const dataStr = JSON.stringify(dataToSave, null, 2);
+                             const blob = new Blob([dataStr], { type: "application/json" });
+                             const url = URL.createObjectURL(blob);
+                             const a = document.createElement('a');
+                             a.href = url;
+                             a.download = "profile_luo.json";
+                             document.body.appendChild(a);
+                             a.click();
+                             document.body.removeChild(a);
+                             URL.revokeObjectURL(url);
+                        }
+                    }
+                };
+
+                onMounted(() => {
+                    loadData();
+                });
+
+                watch(profile, (newVal) => {
+                    localStorage.setItem('luo_profile_draft', JSON.stringify(newVal));
+                    nextTick(() => lucide.createIcons());
+                }, { deep: true });
+
+                return {
+                    profile,
+                    moodFileRefs,
+                    triggerMoodFileUpload,
+                    addSkill,
+                    removeSkill,
+                    addHobby,
+                    removeHobby,
+                    addTimeline,
+                    removeTimeline,
+                    addProject,
+                    removeProject,
+                    addMood,
+                    removeMood,
+                    handleMoodImageUpload,
+                    removeMoodImage,
+                    saveProfile
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
