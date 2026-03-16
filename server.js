@@ -143,38 +143,25 @@ const server = http.createServer((req, res) => {
 
     // 处理 /api/save-luo (luo 的数据保存)
     if (req.method === 'POST' && (req.url === '/api/save-luo' || req.url === '/luo/api/save-luo')) {
-        const actualUrl = removeLuoPrefix(req.url);
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
             try {
                 const newData = JSON.parse(body);
+                const targetFile = path.join(LUO_DATA_DIR, 'profile_luo.json');
                 
-                // 读取现有数据并合并
-                const readAndMerge = (filePath) => {
-                    return new Promise((resolve) => {
-                        fs.readFile(filePath, 'utf8', (err, content) => {
-                            if (err || !content) {
-                                resolve(newData);
-                                return;
-                            }
-                            try {
-                                const existingData = JSON.parse(content);
-                                const mergedData = { ...existingData, ...newData };
-                                resolve(mergedData);
-                            } catch (e) {
-                                resolve(newData);
-                            }
-                        });
-                    });
-                };
-                
-                // 合并两个文件的数据
-                Promise.all([
-                    readAndMerge(LUO_DATA_FILE),
-                    readAndMerge(path.join(LUO_DATA_DIR, 'profile_luo.json'))
-                ]).then(([data1, data2]) => {
-                    const finalData = { ...data1, ...data2 };
+                fs.readFile(targetFile, 'utf8', (err, content) => {
+                    let finalData = newData;
+                    
+                    if (!err && content) {
+                        try {
+                            const existingData = JSON.parse(content);
+                            finalData = { ...existingData, ...newData };
+                        } catch (e) {
+                            finalData = newData;
+                        }
+                    }
+                    
                     const jsonStr = JSON.stringify(finalData, null, 2);
                     
                     const savePromises = [
@@ -182,7 +169,7 @@ const server = http.createServer((req, res) => {
                             fs.writeFile(LUO_DATA_FILE, jsonStr, (err) => err ? reject(err) : resolve());
                         }),
                         new Promise((resolve, reject) => {
-                            fs.writeFile(path.join(LUO_DATA_DIR, 'profile_luo.json'), jsonStr, (err) => err ? reject(err) : resolve());
+                            fs.writeFile(targetFile, jsonStr, (err) => err ? reject(err) : resolve());
                         })
                     ];
                     
