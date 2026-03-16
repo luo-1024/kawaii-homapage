@@ -413,9 +413,11 @@
                     formData.append('file', file);
 
                     try {
+                        const isLuoPath = window.location.pathname.includes('/luo');
+                        const apiPrefix = isLuoPath ? '/luo/api' : '/api';
                         const apiUrl = window.location.hostname === 'localhost' 
-                            ? 'http://localhost:3000/api/upload-luo' 
-                            : '/api/upload-luo';
+                            ? 'http://localhost:3000' + apiPrefix + '/upload-luo' 
+                            : apiPrefix + '/upload-luo';
 
                         console.log('Uploading to:', apiUrl);
 
@@ -496,9 +498,11 @@
                     const mood = profile.value.moods[index];
                     if (mood.imageKey) {
                         try {
+                            const isLuoPath = window.location.pathname.includes('/luo');
+                            const apiPrefix = isLuoPath ? '/luo/api' : '/api';
                             const apiUrl = window.location.hostname === 'localhost' 
-                                ? 'http://localhost:3000/api/delete-file-luo' 
-                                : '/api/delete-file-luo';
+                                ? 'http://localhost:3000' + apiPrefix + '/delete-file-luo' 
+                                : apiPrefix + '/delete-file-luo';
                             await fetch(apiUrl, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -533,9 +537,11 @@
                     formData.append('file', file);
 
                     try {
+                        const isLuoPath = window.location.pathname.includes('/luo');
+                        const apiPrefix = isLuoPath ? '/luo/api' : '/api';
                         const apiUrl = window.location.hostname === 'localhost' 
-                            ? 'http://localhost:3000/api/upload-luo' 
-                            : '/api/upload-luo';
+                            ? 'http://localhost:3000' + apiPrefix + '/upload-luo' 
+                            : apiPrefix + '/upload-luo';
 
                         const response = await fetch(apiUrl, {
                             method: 'POST',
@@ -553,9 +559,11 @@
                         if (result.success && result.url) {
                             if (oldImageKey) {
                                 try {
+                                    const isLuoPath = window.location.pathname.includes('/luo');
+                                    const apiPrefix = isLuoPath ? '/luo/api' : '/api';
                                     const deleteApiUrl = window.location.hostname === 'localhost' 
-                                        ? 'http://localhost:3000/api/delete-file-luo' 
-                                        : '/api/delete-file-luo';
+                                        ? 'http://localhost:3000' + apiPrefix + '/delete-file-luo' 
+                                        : apiPrefix + '/delete-file-luo';
                                     await fetch(deleteApiUrl, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -585,9 +593,11 @@
                     const mood = profile.value.moods[index];
                     if (mood.imageKey) {
                         try {
+                            const isLuoPath = window.location.pathname.includes('/luo');
+                            const apiPrefix = isLuoPath ? '/luo/api' : '/api';
                             const apiUrl = window.location.hostname === 'localhost' 
-                                ? 'http://localhost:3000/api/delete-file-luo' 
-                                : '/api/delete-file-luo';
+                                ? 'http://localhost:3000' + apiPrefix + '/delete-file-luo' 
+                                : apiPrefix + '/delete-file-luo';
                             await fetch(apiUrl, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -610,9 +620,11 @@
                     };
 
                     try {
+                        const isLuoPath = window.location.pathname.includes('/luo');
+                        const apiPrefix = isLuoPath ? '/luo/api' : '/api';
                         const apiUrl = window.location.hostname === 'localhost' 
-                            ? 'http://localhost:3000/api/save-luo' 
-                            : '/api/save-luo';
+                            ? 'http://localhost:3000' + apiPrefix + '/save-luo' 
+                            : apiPrefix + '/save-luo';
 
                         const response = await fetch(apiUrl, {
                             method: 'POST',
