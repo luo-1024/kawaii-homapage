@@ -10,6 +10,8 @@ const DATA_FILE = path.join(__dirname, 'data', 'profile.json');
 const LUO_DATA_FILE = path.join(__dirname, 'data', 'profile_luo.json');
 const LUO_DATA_DIR = path.join(__dirname, 'luo', 'data');
 
+const removeLuoPrefix = (url) => url.replace(/^\/luo/, '');
+
 // 初始化 COS
 const cos = new COS({
     SecretId: process.env.COS_SECRET_ID,
@@ -140,7 +142,8 @@ const server = http.createServer((req, res) => {
     }
 
     // 处理 /api/save-luo (luo 的数据保存)
-    if (req.method === 'POST' && req.url === '/api/save-luo') {
+    if (req.method === 'POST' && (req.url === '/api/save-luo' || req.url === '/luo/api/save-luo')) {
+        const actualUrl = removeLuoPrefix(req.url);
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
@@ -177,7 +180,7 @@ const server = http.createServer((req, res) => {
     }
 
     // 处理 /api/upload-luo (luo 的图片上传)
-    if (req.method === 'POST' && req.url === '/api/upload-luo') {
+    if (req.method === 'POST' && (req.url === '/api/upload-luo' || req.url === '/luo/api/upload-luo')) {
         upload.single('file')(req, res, (err) => {
             if (err) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -219,7 +222,7 @@ const server = http.createServer((req, res) => {
     }
 
     // 处理 /api/delete-file-luo (删除 luo 的 COS 图片)
-    if (req.method === 'POST' && req.url === '/api/delete-file-luo') {
+    if (req.method === 'POST' && (req.url === '/api/delete-file-luo' || req.url === '/luo/api/delete-file-luo')) {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
