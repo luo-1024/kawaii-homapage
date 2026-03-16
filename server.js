@@ -148,29 +148,55 @@ const server = http.createServer((req, res) => {
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
             try {
-                const data = JSON.parse(body);
-                const jsonStr = JSON.stringify(data, null, 2);
+                const newData = JSON.parse(body);
                 
-                // 同时保存到两个位置
-                const savePromises = [
-                    new Promise((resolve, reject) => {
-                        fs.writeFile(LUO_DATA_FILE, jsonStr, (err) => err ? reject(err) : resolve());
-                    }),
-                    new Promise((resolve, reject) => {
-                        fs.writeFile(path.join(LUO_DATA_DIR, 'profile_luo.json'), jsonStr, (err) => err ? reject(err) : resolve());
-                    })
-                ];
-                
-                Promise.all(savePromises)
-                    .then(() => {
-                        res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ success: true, message: 'Saved' }));
-                    })
-                    .catch((err) => {
-                        console.error('Save error:', err);
-                        res.writeHead(500, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ success: false, message: 'Write failed' }));
+                // 读取现有数据并合并
+                const readAndMerge = (filePath) => {
+                    return new Promise((resolve) => {
+                        fs.readFile(filePath, 'utf8', (err, content) => {
+                            if (err || !content) {
+                                resolve(newData);
+                                return;
+                            }
+                            try {
+                                const existingData = JSON.parse(content);
+                                const mergedData = { ...existingData, ...newData };
+                                resolve(mergedData);
+                            } catch (e) {
+                                resolve(newData);
+                            }
+                        });
                     });
+                };
+                
+                // 合并两个文件的数据
+                Promise.all([
+                    readAndMerge(LUO_DATA_FILE),
+                    readAndMerge(path.join(LUO_DATA_DIR, 'profile_luo.json'))
+                ]).then(([data1, data2]) => {
+                    const finalData = { ...data1, ...data2 };
+                    const jsonStr = JSON.stringify(finalData, null, 2);
+                    
+                    const savePromises = [
+                        new Promise((resolve, reject) => {
+                            fs.writeFile(LUO_DATA_FILE, jsonStr, (err) => err ? reject(err) : resolve());
+                        }),
+                        new Promise((resolve, reject) => {
+                            fs.writeFile(path.join(LUO_DATA_DIR, 'profile_luo.json'), jsonStr, (err) => err ? reject(err) : resolve());
+                        })
+                    ];
+                    
+                    Promise.all(savePromises)
+                        .then(() => {
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ success: true, message: 'Saved' }));
+                        })
+                        .catch((err) => {
+                            console.error('Save error:', err);
+                            res.writeHead(500, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ success: false, message: 'Write failed' }));
+                        });
+                });
             } catch (error) {
                 res.writeHead(400);
                 res.end(JSON.stringify({ success: false }));
